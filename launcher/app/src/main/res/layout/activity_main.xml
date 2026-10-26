@@ -294,14 +294,18 @@
 
             <TextView
                 android:id="@+id/novosibirskWeather"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/leftBlock"
                 android:layout_alignStart="@id/leftBlock"
-                android:layout_marginTop="5dp"
+                android:layout_marginTop="12dp"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp"
+                android:maxLines="2"
+                android:ellipsize="end"
                 android:text="Новосибирск · Погода загружается"
-                android:textColor="#CCFFFFFF"
-                android:textSize="15sp"
+                android:textColor="#FFFFFFFF"
+                android:textSize="75sp"
                 android:fontFamily="@string/font_regular"
                 android:visibility="visible" />
 
