@@ -305,7 +305,7 @@
                 android:ellipsize="end"
                 android:text="Новосибирск · Погода загружается"
                 android:textColor="#FFFFFFFF"
-                android:textSize="75sp"
+                android:textSize="37.5sp"
                 android:fontFamily="@string/font_regular"
                 android:visibility="visible" />
 
