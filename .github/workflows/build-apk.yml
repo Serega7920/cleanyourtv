@@ -5,6 +5,7 @@ on:
   push:
     paths:
       - '.github/workflows/build-apk.yml'
+      - 'launcher/**'
 
 jobs:
   build:
