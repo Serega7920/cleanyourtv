@@ -17,14 +17,21 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - name: Configure Android SDK
+      - name: Install Android command-line tools and SDK
         shell: bash
         run: |
-          echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> "$GITHUB_ENV"
-          mkdir -p "$ANDROID_SDK_ROOT/licenses"
-          printf '8933bad161af4178b1185d1a37fbf41ea5269\n' > "$ANDROID_SDK_ROOT/licenses/android-sdk-license"
-          yes | sdkmanager --licenses > /dev/null || true
-          sdkmanager --install "platforms;android-34" "build-tools;34.0.0"
+          set -euo pipefail
+          SDK_ROOT="${ANDROID_SDK_ROOT:-$HOME/android-sdk}"
+          mkdir -p "$SDK_ROOT/cmdline-tools"
+          curl -fL --retry 3 https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -o /tmp/android-commandline-tools.zip
+          unzip -q /tmp/android-commandline-tools.zip -d /tmp/android-cli
+          mv /tmp/android-cli/cmdline-tools "$SDK_ROOT/cmdline-tools/latest"
+          echo "ANDROID_HOME=$SDK_ROOT" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$SDK_ROOT" >> "$GITHUB_ENV"
+          echo "$SDK_ROOT/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
+          mkdir -p "$SDK_ROOT/licenses"
+          printf '8933bad161af4178b1185d1a37fbf41ea5269\n' > "$SDK_ROOT/licenses/android-sdk-license"
+          "$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$SDK_ROOT" --install "platforms;android-34" "build-tools;34.0.0" "platform-tools"
       - name: Build official Weather module
         working-directory: upstream/addons/weather
         run: bash ./gradlew assembleRelease --no-daemon
