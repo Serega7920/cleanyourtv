@@ -17,10 +17,14 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-      - name: Install Android 34 tools
-        run: sdkmanager "platforms;android-34" "build-tools;34.0.0"
+      - name: Configure Android SDK
+        shell: bash
+        run: |
+          echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> "$GITHUB_ENV"
+          mkdir -p "$ANDROID_SDK_ROOT/licenses"
+          printf '8933bad161af4178b1185d1a37fbf41ea5269\n' > "$ANDROID_SDK_ROOT/licenses/android-sdk-license"
+          yes | sdkmanager --licenses > /dev/null || true
+          sdkmanager --install "platforms;android-34" "build-tools;34.0.0"
       - name: Build official Weather module
         working-directory: upstream/addons/weather
         run: bash ./gradlew assembleRelease --no-daemon
