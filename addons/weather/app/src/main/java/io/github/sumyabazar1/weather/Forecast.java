@@ -122,10 +122,15 @@ final class Forecast {
         String where = String.format(Locale.ROOT, "latitude=%.4f&longitude=%.4f", latitude, longitude);
         // DWD's ICON model: Open-Meteo's default blend called light snow over Ulaanbaatar "overcast" while ICON,
         // and Google, had snow falling.
-        JSONObject reply = get("https://api.open-meteo.com/v1/forecast?" + where + "&models=icon_seamless"
+        JSONObject reply;
+        try {
+            reply = get("https://api.open-meteo.com/v1/forecast?" + where + "&models=icon_seamless"
                 + "&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,is_day,wind_speed_10m"
                 + "&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days="
                 + (forecastDays(days) + 1));
+        } catch (IOException primaryError) {
+            return fetchMetNorway(latitude, longitude, days);
+        }
         JSONObject current = reply.getJSONObject("current");
         double temp = current.getDouble("temperature_2m");
         double humidity = current.getDouble("relative_humidity_2m");
@@ -134,6 +139,50 @@ final class Forecast {
                 code, current.getInt("is_day") == 1,
                 days(reply.getJSONObject("daily")), aqiOrUnknown(where),
                 (int) Math.round(humidity), (int) Math.round(current.optDouble("wind_speed_10m", 0)));
+    }
+
+    /** Independent fallback: MET Norway Locationforecast, global coverage. */
+    private static Report fetchMetNorway(double latitude, double longitude, int wantedDays) throws IOException, JSONException {
+        String where = String.format(Locale.ROOT, "lat=%.4f&lon=%.4f", latitude, longitude);
+        JSONObject root = get("https://api.met.no/weatherapi/locationforecast/2.0/compact?" + where);
+        JSONArray series = root.getJSONObject("properties").getJSONArray("timeseries");
+        JSONObject first = series.getJSONObject(0).getJSONObject("data");
+        JSONObject details = first.getJSONObject("instant").getJSONObject("details");
+        double temp = details.getDouble("air_temperature");
+        double humidity = details.optDouble("relative_humidity", 70);
+        int code = 3;
+        JSONObject next = first.optJSONObject("next_1_hours");
+        if (next != null) code = metCode(next.optJSONObject("summary"));
+        List<Day> out = new ArrayList<>();
+        java.util.LinkedHashMap<LocalDate, double[]> daily = new java.util.LinkedHashMap<>();
+        LocalDate today = LocalDate.parse(series.getJSONObject(0).getString("time").substring(0, 10));
+        for (int i = 0; i < series.length(); i++) {
+            JSONObject point = series.getJSONObject(i);
+            LocalDate date = LocalDate.parse(point.getString("time").substring(0, 10));
+            if (!date.isAfter(today) || date.isAfter(today.plusDays(forecastDays(wantedDays)))) continue;
+            JSONObject d = point.getJSONObject("data").getJSONObject("instant").getJSONObject("details");
+            double t = d.getDouble("air_temperature");
+            double[] range = daily.get(date);
+            if (range == null) daily.put(date, new double[]{t,t});
+            else { range[0] = Math.max(range[0], t); range[1] = Math.min(range[1], t); }
+        }
+        for (java.util.Map.Entry<LocalDate,double[]> e : daily.entrySet())
+            out.add(new Day(e.getKey(), code, e.getValue()[0], e.getValue()[1]));
+        return new Report(temp, temp, code, true, out, -1, (int)Math.round(humidity),
+                (int)Math.round(details.optDouble("wind_speed",0)*3.6));
+    }
+
+    private static int metCode(JSONObject summary) {
+        if (summary == null) return 3;
+        String s = summary.optString("symbol_code", "cloudy");
+        if (s.contains("thunder")) return 95;
+        if (s.contains("snow")) return 73;
+        if (s.contains("rain")) return 63;
+        if (s.contains("fog")) return 45;
+        if (s.contains("partlycloudy")) return 2;
+        if (s.contains("clearsky")) return 0;
+        if (s.contains("fair")) return 1;
+        return 3;
     }
 
     /**
@@ -188,6 +237,7 @@ final class Forecast {
 
     private static JSONObject get(String url) throws IOException, JSONException {
         HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
+        connection.setRequestProperty("User-Agent", "CleanYourTV-Weather/1.1 (https://github.com/Serega7920/cleanyourtv)");
         connection.setConnectTimeout(TIMEOUT_MS);
         connection.setReadTimeout(TIMEOUT_MS);
         try (InputStream in = connection.getInputStream()) {
