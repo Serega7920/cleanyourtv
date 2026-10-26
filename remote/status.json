@@ -1,0 +1,7 @@
+{
+  "id": 5,
+  "action": "ram_status",
+  "exit_code": 0,
+  "output": "total        used        free      shared     buffers\nMem:              907         841          66           0          10\n-/+ buffers/cache:            831          76\nSwap:             199         181          18",
+  "timestamp_utc": "2026-10-26T08:33:20.948953+00:00"
+}
