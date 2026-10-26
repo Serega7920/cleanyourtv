@@ -2,6 +2,9 @@ name: Build CleanYourTV APK
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/build-apk.yml'
 
 jobs:
   build:
@@ -14,9 +17,10 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - uses: android-actions/setup-android@v3
-      - name: Install Android SDK
-        run: sdkmanager 'platforms;android-34' 'build-tools;34.0.0'
+      - name: Install Android SDK packages
+        run: |
+          echo "y" | sdkmanager --licenses >/dev/null || true
+          sdkmanager "platforms;android-34" "build-tools;34.0.0"
       - name: Build APK
         working-directory: launcher
         run: |
