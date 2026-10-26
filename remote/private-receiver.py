@@ -10,7 +10,8 @@ ALLOWED = {
  "ram_status": ["shell","free","-m"],
  "storage_status": ["shell","df","-h","/data"],
  "launcher_status": ["shell","cmd","package","resolve-activity","--brief","-a","android.intent.action.MAIN","-c","android.intent.category.HOME"],
- "start_clean_launcher": ["shell","am","start","-n","com.gathin.tvhome/.MainActivity"]
+ "start_clean_launcher": ["shell","am","start","-n","com.gathin.tvhome/.MainActivity"],
+ "launcher_apk_path": ["shell","pm","path","com.gathin.tvhome"]
 }
 def api(method,path,body=None):
     token=TOKEN_FILE.read_text().strip()
