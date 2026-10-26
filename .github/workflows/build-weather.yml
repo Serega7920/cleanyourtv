@@ -1,0 +1,32 @@
+name: Build CleanYourTV Weather APK
+on:
+  push:
+    paths:
+      - '.github/workflows/build-weather.yml'
+  workflow_dispatch:
+jobs:
+  build-weather:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout upstream source
+        run: git clone --depth 1 https://github.com/Gathin23/cleanyourtv.git upstream
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Install Android 34 tools
+        run: sdkmanager "platforms;android-34" "build-tools;34.0.0"
+      - name: Build official Weather module
+        working-directory: upstream/addons/weather
+        run: bash ./gradlew assembleRelease --no-daemon
+      - name: Upload Weather APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: cleanyourtv-weather-apk
+          path: upstream/addons/weather/app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
