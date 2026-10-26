@@ -1,4 +1,4 @@
 {
-  "id": 0,
-  "action": "noop"
+  "id": 1,
+  "action": "ram_status"
 }
