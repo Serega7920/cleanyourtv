@@ -40,6 +40,7 @@ public final class WeatherActivity extends Activity {
     private View content;
     private TextView message;
     private boolean shown;
+    private int failedAttempts;
     /** options.xml: days after today, and the extras on the "Feels like" line. */
     private int forecastDays;
     private boolean showHumidity;
@@ -94,17 +95,29 @@ public final class WeatherActivity extends Activity {
         double lon = Double.longBitsToDouble(place.getLong("lon", 0));
         io.execute(() -> {
             Forecast.Report report;
+            String failure = null;
             try {
                 report = Forecast.fetch(lat, lon, forecastDays);
             } catch (Exception e) {
                 report = null;
+                failure = e.getClass().getSimpleName() + (e.getMessage() == null ? "" : ": " + e.getMessage());
             }
             Forecast.Report result = report;
+            String reason = failure;
             main.post(() -> {
                 if (isDestroyed()) return;
-                if (result != null) show(result);
-                else if (!shown) message.setText(R.string.offline);
-                main.postDelayed(tick, result != null ? Forecast.REFRESH_MS : Forecast.RETRY_MS);
+                if (result != null) {
+                    failedAttempts = 0;
+                    show(result);
+                } else {
+                    failedAttempts++;
+                    if (!shown) {
+                        message.setVisibility(View.VISIBLE);
+                        message.setText("Weather connection failed (attempt " + failedAttempts + ").\n"
+                                + (reason == null ? "Unknown error" : reason) + "\nRetrying automatically in 30 seconds.");
+                    }
+                }
+                main.postDelayed(tick, result != null ? Forecast.REFRESH_MS : 30_000L);
             });
         });
     }
