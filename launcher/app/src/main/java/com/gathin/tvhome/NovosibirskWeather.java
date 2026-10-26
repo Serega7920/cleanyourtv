@@ -15,10 +15,12 @@ final class NovosibirskWeather {
     private static final Handler MAIN = new Handler(Looper.getMainLooper());
     private static final String CITY = "Новосибирск";
     private static final double LAT = 55.0302, LON = 82.9204;
+    private static Runnable pendingRefresh;
     private NovosibirskWeather() {}
 
     static void start(Activity activity, TextView label) {
         if (label == null) return;
+        if (pendingRefresh != null) MAIN.removeCallbacks(pendingRefresh);
         label.setText(CITY + " · Загрузка погоды…");
         Runnable[] refresh = new Runnable[1];
         refresh[0] = () -> {
@@ -44,10 +46,13 @@ final class NovosibirskWeather {
                 String display = result;
                 MAIN.post(() -> {
                     if (!activity.isFinishing() && !activity.isDestroyed()) label.setText(display);
-                    MAIN.postDelayed(refresh[0], 30 * 60 * 1000L);
+                    if (pendingRefresh == refresh[0] && !activity.isFinishing() && !activity.isDestroyed()) {
+                        MAIN.postDelayed(refresh[0], 30 * 60 * 1000L);
+                    }
                 });
             }, "NovosibirskWeather").start();
         };
+        pendingRefresh = refresh[0];
         refresh[0].run();
     }
 
