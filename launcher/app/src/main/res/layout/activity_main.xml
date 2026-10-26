@@ -292,6 +292,19 @@
 
             </LinearLayout>
 
+            <TextView
+                android:id="@+id/novosibirskWeather"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/leftBlock"
+                android:layout_alignStart="@id/leftBlock"
+                android:layout_marginTop="5dp"
+                android:text="Новосибирск · Погода загружается"
+                android:textColor="#CCFFFFFF"
+                android:textSize="15sp"
+                android:fontFamily="@string/font_regular"
+                android:visibility="visible" />
+
             <!-- Shown only when show_stats is on. Outside leftBlock, so the top buttons stay level with the clock
                  row; gone, it takes no space. -->
             <TextView
