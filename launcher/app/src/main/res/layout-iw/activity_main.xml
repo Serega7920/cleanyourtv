@@ -304,23 +304,6 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <TextView
-                android:id="@+id/novosibirskWeather"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/leftBlock"
-                android:layout_alignStart="@id/leftBlock"
-                android:layout_marginTop="12dp"
-                android:paddingTop="6dp"
-                android:paddingBottom="6dp"
-                android:maxLines="2"
-                android:ellipsize="end"
-                android:text="Новосибирск · Погода загружается"
-                android:textColor="#FFFFFFFF"
-                android:textSize="24sp"
-                android:fontFamily="@string/font_regular"
-                android:visibility="visible" />
-
             <!-- Shown only when show_stats is on. Outside leftBlock, so the top buttons stay level with the clock
                  row; gone, it takes no space. -->
             <TextView
@@ -433,4 +416,22 @@
         android:layout_height="10dp"
         android:alpha="0"
         android:importantForAccessibility="no" />
+
+    <!-- Weather overlay on root: independent of header layout and application shelves. -->
+    <TextView
+        android:id="@+id/novosibirskWeather"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|start"
+        android:layout_marginStart="56dp"
+        android:layout_marginEnd="56dp"
+        android:layout_marginTop="150dp"
+        android:maxLines="2"
+        android:ellipsize="end"
+        android:text="Новосибирск · Загрузка погоды…"
+        android:textColor="#FFFFFFFF"
+        android:textSize="23sp"
+        android:fontFamily="@string/font_regular"
+        android:visibility="visible"
+        android:elevation="8dp" />
 </FrameLayout>
