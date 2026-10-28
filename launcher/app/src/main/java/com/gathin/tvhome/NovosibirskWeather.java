@@ -32,7 +32,7 @@ final class NovosibirskWeather {
             new Thread(() -> {
                 String result;
                 try {
-                    JSONObject j = get("https://api.open-meteo.com/v1/forecast?latitude=55.0302&longitude=82.9204&current=temperature_2m,weather_code,pressure_msl,wind_speed_10m&wind_speed_unit=kmh&timezone=Asia%2FNovosibirsk");
+                    JSONObject j = get("https://api.open-meteo.com/v1/forecast?latitude=55.0302&longitude=82.9204&current=temperature_2m,weather_code,pressure_msl,wind_speed_10m&wind_speed_unit=ms&timezone=Asia%2FNovosibirsk");
                     JSONObject c = j.getJSONObject("current");
                     result = format(c.getDouble("temperature_2m"), c.getInt("weather_code"))
                             + details(c.optDouble("pressure_msl", Double.NaN), c.optDouble("wind_speed_10m", Double.NaN));
@@ -48,7 +48,7 @@ final class NovosibirskWeather {
                         double pressure = instant.optDouble("air_pressure_at_sea_level", Double.NaN);
                         double windMs = instant.optDouble("wind_speed", Double.NaN);
                         result = CITY + " · " + signed(temp) + "°C · " + metDescription(symbol)
-                                + details(pressure, Double.isNaN(windMs) ? Double.NaN : windMs * 3.6);
+                                + details(pressure, windMs);
                     } catch (Exception second) {
                         Log.w("NovosibirskWeather", "MET Norway fallback failed", second);
                         String previous = prefs.getString("last_weather", "");
@@ -83,10 +83,10 @@ final class NovosibirskWeather {
         } finally { c.disconnect(); }
     }
 
-    private static String details(double pressureHpa, double windKmh) {
+    private static String details(double pressureHpa, double windMs) {
         StringBuilder text = new StringBuilder();
         if (!Double.isNaN(pressureHpa)) text.append(" · Давление ").append(Math.round(pressureHpa * 0.750061683)).append(" мм рт. ст.");
-        if (!Double.isNaN(windKmh)) text.append(" · Ветер ").append(Math.round(windKmh)).append(" км/ч");
+        if (!Double.isNaN(windMs)) text.append(" · Ветер ").append(String.format(java.util.Locale.US, "%.1f", windMs)).append(" м/с");
         return text.toString();
     }
 
