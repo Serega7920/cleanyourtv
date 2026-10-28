@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.os.Handler;
 import android.os.Looper;
 import android.widget.TextView;
+import android.util.Log;
 import org.json.JSONObject;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -32,6 +33,7 @@ final class NovosibirskWeather {
                     JSONObject c = j.getJSONObject("current");
                     result = format(c.getDouble("temperature_2m"), c.getInt("weather_code"));
                 } catch (Exception first) {
+                    Log.w("NovosibirskWeather", "Open-Meteo request failed", first);
                     try {
                         JSONObject j = get("https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=55.0302&lon=82.9204");
                         JSONObject data = j.getJSONObject("properties").getJSONArray("timeseries").getJSONObject(0).getJSONObject("data");
@@ -40,6 +42,7 @@ final class NovosibirskWeather {
                         String symbol = next == null ? "" : next.getJSONObject("summary").optString("symbol_code");
                         result = CITY + " · " + signed(temp) + "°C · " + metDescription(symbol);
                     } catch (Exception second) {
+                        Log.w("NovosibirskWeather", "MET Norway fallback failed", second);
                         result = CITY + " · Погода недоступна";
                     }
                 }
