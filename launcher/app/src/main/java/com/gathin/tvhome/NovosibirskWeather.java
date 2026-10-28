@@ -1,6 +1,7 @@
 package com.gathin.tvhome;
 
 import android.app.Activity;
+import android.content.SharedPreferences;
 import android.os.Handler;
 import android.os.Looper;
 import android.widget.TextView;
@@ -22,7 +23,9 @@ final class NovosibirskWeather {
     static void start(Activity activity, TextView label) {
         if (label == null) return;
         if (pendingRefresh != null) MAIN.removeCallbacks(pendingRefresh);
-        label.setText(CITY + " · Загрузка погоды…");
+        SharedPreferences prefs = activity.getSharedPreferences("novosibirsk_weather", Activity.MODE_PRIVATE);
+        String cached = prefs.getString("last_weather", "");
+        label.setText(cached.isEmpty() ? CITY + " · Загрузка погоды…" : cached + " · ранее");
         Runnable[] refresh = new Runnable[1];
         refresh[0] = () -> {
             if (activity.isFinishing() || activity.isDestroyed()) return;
@@ -43,8 +46,12 @@ final class NovosibirskWeather {
                         result = CITY + " · " + signed(temp) + "°C · " + metDescription(symbol);
                     } catch (Exception second) {
                         Log.w("NovosibirskWeather", "MET Norway fallback failed", second);
-                        result = CITY + " · Погода недоступна";
+                        String previous = prefs.getString("last_weather", "");
+                        result = previous.isEmpty() ? CITY + " · Погода недоступна" : previous + " · ранее";
                     }
+                }
+                if (!result.endsWith(" · ранее") && !result.endsWith("Погода недоступна")) {
+                    prefs.edit().putString("last_weather", result).apply();
                 }
                 String display = result;
                 MAIN.post(() -> {
