@@ -32,9 +32,10 @@ final class NovosibirskWeather {
             new Thread(() -> {
                 String result;
                 try {
-                    JSONObject j = get("https://api.open-meteo.com/v1/forecast?latitude=55.0302&longitude=82.9204&current=temperature_2m,weather_code&timezone=Asia%2FNovosibirsk");
+                    JSONObject j = get("https://api.open-meteo.com/v1/forecast?latitude=55.0302&longitude=82.9204&current=temperature_2m,weather_code,pressure_msl,wind_speed_10m&wind_speed_unit=kmh&timezone=Asia%2FNovosibirsk");
                     JSONObject c = j.getJSONObject("current");
-                    result = format(c.getDouble("temperature_2m"), c.getInt("weather_code"));
+                    result = format(c.getDouble("temperature_2m"), c.getInt("weather_code"))
+                            + details(c.optDouble("pressure_msl", Double.NaN), c.optDouble("wind_speed_10m", Double.NaN));
                 } catch (Exception first) {
                     Log.w("NovosibirskWeather", "Open-Meteo request failed", first);
                     try {
@@ -43,7 +44,11 @@ final class NovosibirskWeather {
                         double temp = data.getJSONObject("instant").getJSONObject("details").getDouble("air_temperature");
                         JSONObject next = data.optJSONObject("next_1_hours");
                         String symbol = next == null ? "" : next.getJSONObject("summary").optString("symbol_code");
-                        result = CITY + " · " + signed(temp) + "°C · " + metDescription(symbol);
+                        JSONObject instant = data.getJSONObject("instant").getJSONObject("details");
+                        double pressure = instant.optDouble("air_pressure_at_sea_level", Double.NaN);
+                        double windMs = instant.optDouble("wind_speed", Double.NaN);
+                        result = CITY + " · " + signed(temp) + "°C · " + metDescription(symbol)
+                                + details(pressure, Double.isNaN(windMs) ? Double.NaN : windMs * 3.6);
                     } catch (Exception second) {
                         Log.w("NovosibirskWeather", "MET Norway fallback failed", second);
                         String previous = prefs.getString("last_weather", "");
@@ -76,6 +81,13 @@ final class NovosibirskWeather {
             while ((n = in.read(b)) != -1) out.write(b, 0, n);
             return new JSONObject(new String(out.toByteArray(), StandardCharsets.UTF_8));
         } finally { c.disconnect(); }
+    }
+
+    private static String details(double pressureHpa, double windKmh) {
+        StringBuilder text = new StringBuilder();
+        if (!Double.isNaN(pressureHpa)) text.append(" · Давление ").append(Math.round(pressureHpa * 0.750061683)).append(" мм рт. ст.");
+        if (!Double.isNaN(windKmh)) text.append(" · Ветер ").append(Math.round(windKmh)).append(" км/ч");
+        return text.toString();
     }
 
     private static String signed(double t) { long n = Math.round(t); return n > 0 ? "+" + n : Long.toString(n); }
