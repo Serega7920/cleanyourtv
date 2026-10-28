@@ -21,7 +21,8 @@ final class NovosibirskWeather {
     private NovosibirskWeather() {}
 
     static void start(Activity activity, TextView label) {
-        if (label == null) return;
+        if (label == null) { Log.e("NovosibirskWeather", "Weather TextView missing from active layout"); return; }
+        Log.i("NovosibirskWeather", "Weather widget started, version 3.1-weather");
         if (pendingRefresh != null) MAIN.removeCallbacks(pendingRefresh);
         SharedPreferences prefs = activity.getSharedPreferences("novosibirsk_weather", Activity.MODE_PRIVATE);
         String cached = prefs.getString("last_weather", "");
